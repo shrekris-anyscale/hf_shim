@@ -20,7 +20,7 @@ from transformers import AutoTokenizer
 from hf_shim.tgi.policy import QuotaBasedRequestSelectionPolicy
 from hf_shim.tgi.queue import InferenceRequest
 from hf_shim.tgi.tokenstream import TokenStream
-from hf_shim.tgi.types import SamplingParams
+from hf_shim.tgi.params import SamplingParams
 
 if TYPE_CHECKING:
     from text_generation_server.models.types import (

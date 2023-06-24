@@ -11,7 +11,7 @@ class RequestSelectionPolicy(ABC):
     def select_new_requests(
         self,
         in_process_requests: List[InferenceRequest],
-        queue: asyncio.Queue,
+        queue: asyncio.Queue[InferenceRequest],
     ) -> List[InferenceRequest]:
         raise NotImplementedError
 
@@ -70,16 +70,14 @@ class QuotaBasedRequestSelectionPolicy(RequestSelectionPolicy):
             for r in in_process_requests:
                 self.oomed_requests.add(r.id)
 
-        min_num_requests, token_budget = self.calculate_quota(
-            in_process_requests, has_oom=False
-        )
+        min_num_requests, token_budget = self.calculate_quota(in_process_requests)
 
         if min_num_requests and queue.qsize() < min_num_requests:
             return []
 
         hypothetical_results = []
         while len(hypothetical_results) < queue.qsize():
-            request = queue._queue[0]
+            request: InferenceRequest = queue._queue[0]
             if request.total_tokens >= token_budget:
                 break
             hypothetical_results.append(request)
@@ -91,14 +89,11 @@ class QuotaBasedRequestSelectionPolicy(RequestSelectionPolicy):
         else:
             results = []
             for _ in hypothetical_results:
-                print("getting from queue")
                 results.append(queue.get_nowait())
 
         return results
 
-    def calculate_quota(
-        self, in_process_requests: List[InferenceRequest], has_oom: bool = False
-    ) -> Quota:
+    def calculate_quota(self, in_process_requests: List[InferenceRequest]) -> Quota:
         if not in_process_requests:
             return Quota(
                 min_num_requests=None,
@@ -107,7 +102,7 @@ class QuotaBasedRequestSelectionPolicy(RequestSelectionPolicy):
 
         batch_size = len(in_process_requests)
 
-        # calculate minmal_new_requests to be served
+        # Calculate min_num_requests to be served
         if self.waiting_tokens >= self.max_waiting_tokens:
             pass
         else:

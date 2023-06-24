@@ -1,8 +1,5 @@
 import time
-from collections import deque
 from dataclasses import dataclass
-from threading import Condition, RLock
-from typing import Optional
 
 from text_generation_server.pb.generate_pb2 import (
     Request as GenerationRequest,

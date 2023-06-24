@@ -18,7 +18,7 @@ if TYPE_CHECKING:
         Generation,
     )
 
-from hf_shim.tgi.context import reset_batch_id, get_batch_id
+from hf_shim.tgi.context import reset_batch_id, get_and_increment_batch_id
 
 
 @dataclass
@@ -37,7 +37,7 @@ def create_batch(
     model: "Model", requests: List["GenerationRequest"]
 ) -> Type["CausalLMBatch"]:
     return model.batch_type.from_pb(
-        FakePB2(id=get_batch_id(), requests=requests),
+        FakePB2(id=get_and_increment_batch_id(), requests=requests),
         tokenizer=model.tokenizer,
         dtype=model.dtype,
         device=model.device,
@@ -48,7 +48,7 @@ def concatenate_batches(
     model: "Model", batches: List["CausalLMBatch"]
 ) -> "CausalLMBatch":
     # Reset batch_id
-    batches[0].batch_id = get_batch_id()
+    batches[0].batch_id = get_and_increment_batch_id()
     return model.batch_type.concatenate(batches)
 
 
@@ -122,7 +122,7 @@ class InferenceWorker:
         filtered = batch_state.filter(request_ids)
         # Reset batch_id
 
-        filtered.batch_id = get_batch_id()
+        filtered.batch_id = get_and_increment_batch_id()
         if len(filtered):
             self._batch_state_cache[filtered.batch_id] = filtered
             return filtered.batch_id

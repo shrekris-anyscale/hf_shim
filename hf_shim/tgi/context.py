@@ -21,7 +21,7 @@ _batch_id = 0
 # Import these and use them to modify or access global variables.
 
 
-def get_request_id() -> int:
+def get_and_increment_request_id() -> int:
     global _request_id
     _request_id += 1
     return _request_id
@@ -32,7 +32,7 @@ def reset_batch_id() -> None:
     _batch_id = 0
 
 
-def get_batch_id() -> int:
+def get_and_increment_batch_id() -> int:
     global _batch_id
     _batch_id += 1
     return _batch_id

@@ -21,7 +21,7 @@ from hf_shim.tgi.policy import QuotaBasedRequestSelectionPolicy
 from hf_shim.tgi.queue import InferenceRequest
 from hf_shim.tgi.tokenstream import TokenStream
 from hf_shim.tgi.params import SamplingParams
-from hf_shim.tgi.context import get_request_id
+from hf_shim.tgi.context import get_and_increment_request_id
 
 if TYPE_CHECKING:
     from text_generation_server.models.types import (
@@ -149,7 +149,7 @@ class InferenceScheduler:
     ) -> TokenStream:
         params.max_new_tokens = max(1, params.max_new_tokens)
         request = GenerationRequest(
-            id=get_request_id(),
+            id=get_and_increment_request_id(),
             inputs=input_text,
             truncate=max_length,
             prefill_logprobs=False,

@@ -12,10 +12,6 @@ class SamplingParams:
     seed: int
     repetition_penalty: float
     watermark: bool
-
     max_new_tokens: int
     stop_sequences: List[str]
     ignore_eos_token: bool
-
-
-__all__ = ["SamplingParams"]

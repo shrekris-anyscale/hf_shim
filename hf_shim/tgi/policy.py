@@ -68,7 +68,7 @@ class QuotaBasedRequestSelectionPolicy(RequestSelectionPolicy):
         self,
         in_process_requests: List[InferenceRequest],
         queue: asyncio.Queue,
-        has_oom: bool=False,
+        has_oom: bool = False,
     ) -> List[InferenceRequest]:
         if has_oom:
             self.oom_penalty = 0.7

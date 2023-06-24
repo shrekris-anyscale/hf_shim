@@ -257,10 +257,7 @@ class InferenceScheduler:
             await self._queue_put_event.wait()
             self._queue_put_event.clear()
 
-        # requests = self._request_selection_policy.select_new_requests(
-        #     in_process_requests, self._request_queue
-        # )
-        requests = self._request_selection_policy.select_new_requests_asyncio_queue(
+        requests = self._request_selection_policy.select_new_requests(
             in_process_requests, self._request_queue
         )
         self._has_oom = False

@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 from collections import namedtuple
 from typing import List
 
-from hf_shim.tgi.queue import InferenceRequest, RequestQueue
+from hf_shim.tgi.queue import InferenceRequest
 
 
 class RequestSelectionPolicy(ABC):
@@ -11,7 +11,7 @@ class RequestSelectionPolicy(ABC):
     def select_new_requests(
         self,
         in_process_requests: List[InferenceRequest],
-        queue: RequestQueue,
+        queue: asyncio.Queue,
         has_oom: bool = False,
     ) -> List[InferenceRequest]:
         raise NotImplementedError
@@ -67,45 +67,14 @@ class QuotaBasedRequestSelectionPolicy(RequestSelectionPolicy):
     def select_new_requests(
         self,
         in_process_requests: List[InferenceRequest],
-        queue: RequestQueue,
-        has_oom: bool = False,
+        queue: asyncio.Queue,
+        has_oom: bool=False,
     ) -> List[InferenceRequest]:
         if has_oom:
             self.oom_penalty = 0.7
             for r in in_process_requests:
                 self.oomed_requests.add(r.id)
-        min_num_requests, token_budget = self.calculate_quota(
-            in_process_requests, has_oom
-        )
-        self.waiting_tokens += 1
 
-        if min_num_requests and len(queue) < min_num_requests:
-            return []
-
-        results = []
-        while not queue.empty():
-            request = queue.peek()
-            if (
-                self._calculate_budget(in_process_requests, results, request)
-                >= token_budget
-            ):
-                break
-            results.append(request)
-            queue.pop()
-
-        if min_num_requests and len(results) < min_num_requests:
-            for request in results:
-                queue.reverse_push(request)
-            return []
-
-        if results:
-            self.waiting_tokens = 0
-
-        return results
-
-    def select_new_requests_asyncio_queue(
-        self, in_process_requests: List[InferenceRequest], queue: asyncio.Queue
-    ) -> List[InferenceRequest]:
         min_num_requests, token_budget = self.calculate_quota(
             in_process_requests, has_oom=False
         )
@@ -153,30 +122,3 @@ class QuotaBasedRequestSelectionPolicy(RequestSelectionPolicy):
             min_num_requests=None,
             token_budget=int(self.max_batch_total_tokens * self.oom_penalty),
         )
-
-
-class StaticBatchPolicy(RequestSelectionPolicy):
-    def __init__(
-        self,
-        batch_size: int,
-    ):
-        self.batch_size = batch_size
-
-    def select_new_requests(
-        self,
-        in_process_requests: List[InferenceRequest],
-        queue: RequestQueue,
-        has_oom: bool = False,
-    ) -> List[InferenceRequest]:
-        if in_process_requests:
-            return []
-        if len(queue) < self.batch_size:
-            return []
-
-        results = []
-        while not queue.empty() and len(results) < self.batch_size:
-            request = queue.peek()
-            results.append(request)
-            queue.pop()
-
-        return results

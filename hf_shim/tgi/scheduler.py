@@ -21,6 +21,7 @@ from hf_shim.tgi.policy import QuotaBasedRequestSelectionPolicy
 from hf_shim.tgi.queue import InferenceRequest
 from hf_shim.tgi.tokenstream import TokenStream
 from hf_shim.tgi.params import SamplingParams
+from hf_shim.tgi.context import get_request_id
 
 if TYPE_CHECKING:
     from text_generation_server.models.types import (
@@ -28,15 +29,6 @@ if TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
-
-_request_id = 0
-
-
-def get_request_id() -> int:
-    # TODO: more robust request id generation.
-    global _request_id
-    _request_id += 1
-    return _request_id
 
 
 class Tokenizer(ABC):

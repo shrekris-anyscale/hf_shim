@@ -18,18 +18,7 @@ if TYPE_CHECKING:
         Generation,
     )
 
-_batch_id = 0
-
-
-def _reset_batch_id():
-    global _batch_id
-    _batch_id = 0
-
-
-def get_batch_id() -> int:
-    global _batch_id
-    _batch_id += 1
-    return _batch_id
+from hf_shim.tgi.context import reset_batch_id, get_batch_id
 
 
 @dataclass

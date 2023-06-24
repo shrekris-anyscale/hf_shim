@@ -12,17 +12,12 @@ class RequestSelectionPolicy(ABC):
         self,
         in_process_requests: List[InferenceRequest],
         queue: asyncio.Queue,
-        has_oom: bool = False,
     ) -> List[InferenceRequest]:
         raise NotImplementedError
 
     @abstractmethod
     def request_finished(self, finished_request: InferenceRequest):
-        # noqa
-        pass
-
-    # TODO: we might also interested in other events, such as when a request is
-    # finished, or when a token is generated.
+        raise NotImplementedError
 
 
 Quota = namedtuple("Quota", ["min_num_requests", "token_budget"])

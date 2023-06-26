@@ -205,13 +205,13 @@ class TGIInferenceWorker(InferenceWorker):
         with FileLock(lock_path):
             download_weights(model_id=model_id, revision=revision)
         print("weights downloaded")
-        with patch(
-            "text_generation_server.utils.dist.initialize_torch_distributed",
-            initialize_torch_distributed,
-        ), patch(
-            "text_generation_server.models.gpt_neox.initialize_torch_distributed",
-            initialize_torch_distributed,
-        ):  # ExitStack() as stack:
+        # with patch(
+        #     "text_generation_server.utils.dist.initialize_torch_distributed",
+        #     initialize_torch_distributed,
+        # ), patch(
+        #     "text_generation_server.models.gpt_neox.initialize_torch_distributed",
+        #     initialize_torch_distributed,
+        # ):  # ExitStack() as stack:
             # mgrs = [patch(f"{module}.initialize_torch_distributed") for module in sys.modules if module.startswith("text_generation_server.models")]
             # indices_to_remove = []
             # for i, mgr in enumerate(mgrs):
@@ -221,15 +221,15 @@ class TGIInferenceWorker(InferenceWorker):
             #         indices_to_remove.append(i)
             # for i in reversed(indices_to_remove):
             #     mgrs.pop(i)
-            print("get model")
-            super().__init__(
-                lambda: get_model(
-                    model_id=model_id,
-                    revision=revision,
-                    sharded=int(os.getenv("WORLD_SIZE", "1")) > 1
-                    if sharded is None
-                    else sharded,
-                    quantize=quantize,
-                    trust_remote_code=trust_remote_code,
-                )
+        print("get model")
+        super().__init__(
+            lambda: get_model(
+                model_id=model_id,
+                revision=revision,
+                sharded=int(os.getenv("WORLD_SIZE", "1")) > 1
+                if sharded is None
+                else sharded,
+                quantize=quantize,
+                trust_remote_code=trust_remote_code,
             )
+        )

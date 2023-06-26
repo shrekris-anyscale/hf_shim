@@ -7,7 +7,6 @@ from dataclasses import dataclass
 from threading import Lock
 from typing import TYPE_CHECKING, List, Optional, Tuple
 
-from ray._private.utils import run_background_task
 from text_generation_server.pb.generate_pb2 import (
     NextTokenChooserParameters,
     StoppingCriteriaParameters,
@@ -17,7 +16,7 @@ from text_generation_server.pb.generate_pb2 import (
 )
 from transformers import AutoTokenizer
 
-from hf_shim.tgi.policy import QuotaBasedRequestSelectionPolicy
+from hf_shim.tgi.policy import RequestSelectionPolicy
 from hf_shim.tgi.queue import InferenceRequest
 from hf_shim.tgi.tokenstream import TokenStream
 from hf_shim.tgi.params import SamplingParams
@@ -114,8 +113,7 @@ class InferenceScheduler:
         self,
         tokenizer: Tokenizer,
         inference_worker_loader,
-        request_selection_policy: QuotaBasedRequestSelectionPolicy,  # RequestSelectionPolicy,
-        # request_queue: RequestQueue,
+        request_selection_policy: RequestSelectionPolicy,
         request_queue: asyncio.Queue,
         inline: bool = False,
     ):
@@ -130,15 +128,14 @@ class InferenceScheduler:
         self._has_oom = False
         print("InferenceScheduler init")
         if not inline:
-            # self._thread = Thread(target=self._run_scheduling_loop)
-            # self._thread.start()
-            # self.scheduling_loop_task = asyncio.get_event_loop().create_task(self._run_scheduling_loop())
-            self.scheduling_loop_task = run_background_task(self._run_scheduling_loop())
+            self.scheduling_loop_task = asyncio.get_event_loop().create_task(
+                self._run_scheduling_loop(),
+                name="InferenceScheduler scheduling loop"
+            )
 
     def stop(self):
         with self._lock:
             self._stop = True
-        # self._thread.join()
 
     def is_stopped(self) -> bool:
         with self._lock:
